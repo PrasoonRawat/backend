@@ -8,6 +8,7 @@ import authRoutes from './routes/authRoutes.js';
 import userDashboardRoutes from './routes/userDashboardRoutes.js';
 import doctorDashboardRoutes from './routes/doctorDashboardRoutes.js';
 import appointmentRoutes from './routes/appointments.js';
+import doctorRoutes from './routes/doctorRoutes.js';
 
 // main code
 dotenv.config();
@@ -20,6 +21,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user/dashboard', userDashboardRoutes);
 app.use('/api/doctor/dashboard', doctorDashboardRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/doctors', doctorRoutes);
 
 mongoose
     .connect(process.env.MONGO_URI)

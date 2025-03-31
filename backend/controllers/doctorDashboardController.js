@@ -1,6 +1,33 @@
 import Doctor from '../models/Doctors.js';
 import User from '../models/Users.js'; 
 
+export const getDoctors = async (req, res) => {
+    try {
+        let { page = 1, limit = 15, search = "" } = req.query;
+        page = parseInt(page);
+        limit = parseInt(limit);
+
+        const query = search
+            ? { fullname: { $regex: search, $options: "i" } }
+            : {}; // Case-insensitive search
+
+        const doctors = await Doctor.find(query)
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .exec();
+
+        const total = await Doctor.countDocuments(query);
+
+        res.json({
+            doctors,
+            currentPage: page,
+            totalPages: Math.ceil(total / limit),
+            totalDoctors: total,
+        });
+    } catch (error) {
+        res.status(500).json({ error: "Server error" });
+    }
+};
 
 
 // upload Documents
