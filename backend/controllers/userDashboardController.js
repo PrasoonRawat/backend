@@ -1,5 +1,6 @@
 import User from '../models/Users.js';
 import Doctor from '../models/Doctors.js';
+import cloudinary from '../config/cloudinary.js';
 
 export const getUserProfile = async (req, res) => {
     try {
@@ -62,7 +63,6 @@ export const getUserDocuments = async (req, res) => {
 // };
 
 
-import cloudinary from '../config/cloudinary.js';
 
 export const uploadDocument = async (req, res) => {
     try {
