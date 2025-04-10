@@ -9,6 +9,7 @@ import userDashboardRoutes from './routes/userDashboardRoutes.js';
 import doctorDashboardRoutes from './routes/doctorDashboardRoutes.js';
 import appointmentRoutes from './routes/appointments.js';
 import doctorRoutes from './routes/doctorRoutes.js';
+import storyRoutes from './routes/storyRoutes.js';
 
 // main code
 dotenv.config();
@@ -22,6 +23,7 @@ app.use('/api/user/dashboard', userDashboardRoutes);
 app.use('/api/doctor/dashboard', doctorDashboardRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/doctors', doctorRoutes);
+app.use('/api/stories', storyRoutes);
 
 mongoose
     .connect(process.env.MONGO_URI)

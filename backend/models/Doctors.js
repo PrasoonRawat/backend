@@ -21,6 +21,7 @@ const DoctorsSchema = new mongoose.Schema({
     ratings: { type: Number, min: 0, max: 5, default: 0 }, //need this
     languagesSpoken: { type: [String], required: true }, //need this
     appointments: { type: [mongoose.Schema.Types.ObjectId], ref: 'Appointments', default: [] },
+    stories: {type: [mongoose.Schema.Types.ObjectId],ref: 'Stories', default: []},      
     availability: {
         type: [{
             day: { type: String, required: true },
