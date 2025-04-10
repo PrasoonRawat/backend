@@ -93,7 +93,7 @@ export const getStoriesByDoctor = async (req, res) => {
     // Format the time as "1 week ago", etc.
     const formattedStories = stories.map((s) => ({
       ...s._doc,
-      timeAgo: moment(s.createdAt).fromNow(),
+      timeAgo: moment(s.submittedAt).fromNow(),
     }));
 
     res.status(200).json(formattedStories);
