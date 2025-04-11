@@ -72,6 +72,7 @@ const DoctorsSchema = new mongoose.Schema({
     fee: { type: Number, required: true },
     emergencyFee: { type: Number, required: true },
     location: { type: String, required: true }, //need this
+    city: { type: String, required: true }, //need this
     ratings: { type: Number, min: 0, max: 5, default: 0 }, //need this
     languagesSpoken: { type: [String], required: true }, //need this
     stories: {type: [mongoose.Schema.Types.ObjectId],ref: 'Stories', default: []},      

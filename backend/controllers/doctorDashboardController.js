@@ -1,9 +1,31 @@
 import Doctor from '../models/Doctors.js';
 import User from '../models/Users.js'; 
 
+
+// view doctor profile to public
+
+export const getDoctorById = async (req, res) => {
+  try {
+    console.log("Fetching doctor by ID:", req.params.id);
+
+    const doctor = await Doctor.findById(req.params.id).populate('stories');
+
+    if (!doctor) {
+      console.log("Doctor not found for ID:", req.params.id);
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    res.json(doctor);
+  } catch (err) {
+    console.error("Error fetching doctor:", err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+  
+
 export const getDoctors = async (req, res) => {
     try {
-        let { page = 1, limit = 15, search = "", language = "", location = "", specialization="" } = req.query;
+        let { page = 1, limit = 15, search = "", language = "", city = "", specialization="" } = req.query;
         page = parseInt(page);
         limit = parseInt(limit);
 
@@ -26,8 +48,8 @@ export const getDoctors = async (req, res) => {
         }
 
         // Filter by location
-        if (location) {
-            query.location = { $regex: location, $options: "i" };
+        if (city) {
+            query.city = { $regex: city, $options: "i" };
         }
 
         if (specialization) {
