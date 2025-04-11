@@ -3,7 +3,7 @@ import User from '../models/Users.js';
 
 export const getDoctors = async (req, res) => {
     try {
-        let { page = 1, limit = 15, search = "", language = "", location = "", doctorate="" } = req.query;
+        let { page = 1, limit = 15, search = "", language = "", location = "", specialization="" } = req.query;
         page = parseInt(page);
         limit = parseInt(limit);
 
@@ -30,8 +30,8 @@ export const getDoctors = async (req, res) => {
             query.location = { $regex: location, $options: "i" };
         }
 
-        if (doctorate) {
-            query.doctorate = { $regex: doctorate, $options: "i" };
+        if (specialization) {
+            query.specialization = { $regex: specialization, $options: "i" };
         }
 
         // Fetch doctors with pagination
