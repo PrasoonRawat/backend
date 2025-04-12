@@ -1,6 +1,6 @@
 import express from 'express';
 import { verifyToken } from '../middleware/authMiddleware.js';
-import { getDoctorProfile, updateDoctorProfile, addAvailability, updateAvailability, deleteAvailability, uploadDocumentAsDoctor, getSharedDocuments } from '../controllers/doctorDashboardController.js';
+import { getDoctorProfile, updateDoctorProfile, addAvailability, updateAvailability, deleteAvailability, uploadDocumentAsDoctor, getSharedDocuments,getDoctorAvailability } from '../controllers/doctorDashboardController.js';
 import upload from '../middleware/multerMiddleware.js';
 
 
@@ -15,5 +15,6 @@ router.get('/shared-documents', verifyToken, getSharedDocuments);
 router.post('/availability', verifyToken, addAvailability);
 router.put('/availability', verifyToken, updateAvailability);
 router.delete('/availability', verifyToken, deleteAvailability);
+router.get('/:id/availability', getDoctorAvailability); // No auth needed for this
 
 export default router;

@@ -5,4 +5,5 @@ const router = express.Router();
 
 router.get("/doctors", getDoctors);
 router.get("/doctors/:id", getDoctorById);
+
 export default router;

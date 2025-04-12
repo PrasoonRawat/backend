@@ -103,6 +103,18 @@ export const uploadDocumentAsDoctor = async (req, res) => {
     }
 };
 
+// get availability slots for a doctor
+export const getDoctorAvailability = async (req, res) => {
+  try {
+    const doctor = await Doctor.findById(req.params.id).select('availability');
+    if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
+    res.status(200).json(doctor.availability);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+  
+
 
 // View Doctor Profile
 export const getDoctorProfile = async (req, res) => {
