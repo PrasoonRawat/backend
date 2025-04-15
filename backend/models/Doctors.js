@@ -77,14 +77,20 @@ const DoctorsSchema = new mongoose.Schema({
     languagesSpoken: { type: [String], required: true }, //need this
     stories: {type: [mongoose.Schema.Types.ObjectId],ref: 'Stories', default: []},      
     availability: {
-        type: [{
-            day: { type: String, required: true },
-            startTime: { type: String, required: true },
-            endTime: { type: String, required: true },
-            booked: { type: Boolean, default: false }
-        }],
-        default: []
-    },
+        type: [
+          {
+            day: { type: String, required: true }, // e.g., Monday
+            timeRanges: [
+              {
+                startTime: { type: String, required: true }, // "09:00"
+                endTime: { type: String, required: true },   // "15:00"
+              },
+            ],
+            slotInterval: { type: Number, required: true }, // In minutes (e.g., 15, 30)
+          },
+        ],
+        default: [],
+      },      
     appointments: { type: [mongoose.Schema.Types.ObjectId], ref: 'Appointments', default: [] },
     sharedDocuments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Users' }],
 }, { timestamps: true });

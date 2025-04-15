@@ -1,71 +1,99 @@
 import Appointment from '../models/Appointments.js';
 import Doctor from '../models/Doctors.js';
 import User from '../models/Users.js';
+import { generateTimeSlots } from '../utils/slotGenerator.js';
+
+function addMinutesToTime(timeStr, minutesToAdd) {
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes + minutesToAdd, 0);
+  return date.toTimeString().substring(0, 5); // "HH:MM"
+}
+
+
+export const getAvailableSlots = async (req, res) => {
+  try {
+    const { doctorId, date } = req.query;
+
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
+
+    const selectedDay = new Date(date).toLocaleString("en-US", { weekday: "long" });
+
+    const availabilityForDay = doctor.availability.find(a => a.day === selectedDay);
+    if (!availabilityForDay) return res.json({ slots: [] });
+
+    const bookedAppointments = await Appointment.find({
+      doctor: doctorId,
+      date,
+      status: { $in: ['pending', 'approved'] }
+    });
+
+    const bookedTimes = bookedAppointments.map(a => a.time);
+
+    let availableSlots = [];
+
+    for (let range of availabilityForDay.timeRanges) {
+      const generated = generateTimeSlots(range.startTime, range.endTime, availabilityForDay.slotInterval);
+      const free = generated.filter(slot => !bookedTimes.includes(slot));
+      availableSlots.push(...free);
+    }
+
+    res.json({ slots: availableSlots });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 
 export const requestAppointment = async (req, res) => {
-    try {
-      const { doctorId, date, startTime, endTime } = req.body;
-      const userId = req.user.id;
-  
-      // Validate Doctor
-      const doctor = await Doctor.findById(doctorId);
-      if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
-  
-      // Extract day from the date (e.g., "Monday", "Tuesday")
-      const appointmentDay = new Date(date).toLocaleString('en-US', { weekday: 'long' }).toLowerCase();  // Convert to lowercase
-  
-      console.log("Requested appointment day: ", appointmentDay);  // Log the requested appointment day
-  
-      // Check if the day exists in the doctor's availability
-      const isAvailable = doctor.availability.some(slot => {
-        const appointmentDate = new Date(date);
-        const appointmentDay = appointmentDate.toLocaleString('en-US', { weekday: 'long' }).toLowerCase(); // Convert to lowercase
-        const doctorDay = slot.day.toLowerCase(); // Convert to lowercase
+  try {
+    const { doctorId, userId, date, startTime } = req.body;
+
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) return res.status(404).json({ message: "Doctor not found" });
+
+    // Get availability for selected day
+    const selectedDay = new Date(date).toLocaleString("en-US", { weekday: "long" });
+    const availabilityForDay = doctor.availability.find(d => d.day === selectedDay);
+    if (!availabilityForDay) return res.status(400).json({ message: "Doctor not available on this day" });
     
-        console.log("Requested appointment day:", appointmentDay);  // "monday"
-        console.log("Doctor's availability day:", doctorDay);  // "monday"
-        console.log("Requested start time:", startTime);
-        console.log("Requested end time:", endTime);
-        console.log("Doctor's availability start time:", slot.startTime);
-        console.log("Doctor's availability end time:", slot.endTime);
+    // calculate endTime
+    const endTime = addMinutesToTime(startTime, availabilityForDay.slotInterval);
+
     
-        return doctorDay === appointmentDay &&
-               slot.startTime === startTime &&
-               slot.endTime === endTime &&
-               !slot.booked;
+    // Get all booked slots for that day
+    const existingAppointments = await Appointment.find({
+      doctor: doctorId,
+      date,
+      status: { $in: ['pending', 'approved'] }
     });
-    
-    
-    
-    
-    function getDayOfWeek(day) {
-        const daysMap = {
-            "Sunday": 0,
-            "Monday": 1,
-            "Tuesday": 2,
-            "Wednesday": 3,
-            "Thursday": 4,
-            "Friday": 5,
-            "Saturday": 6
-        };
-        return daysMap[day];
+
+    const bookedTimes = existingAppointments.map(a => a.startTime);
+
+    if (bookedTimes.includes(startTime)) {
+      return res.status(400).json({ message: "Time slot already booked" });
     }
-    
-  
-      if (!isAvailable) return res.status(400).json({ message: 'Selected time slot is not available' });
-  
-      // Create Appointment
-      const newAppointment = new Appointment({ user: userId, doctor: doctorId, date, startTime, endTime });
-      await newAppointment.save();
-  
-      // Update User & Doctor
-      await User.findByIdAndUpdate(userId, { $push: { appointments: newAppointment._id } });
-      await Doctor.findByIdAndUpdate(doctorId, { $push: { appointments: newAppointment._id } });
-  
-      res.status(201).json({ message: 'Appointment requested successfully sent', appointment: newAppointment });
-    } catch (error) {
-      res.status(500).json({ message: 'Server Error', error });
-    }
+
+    const newAppointment = new Appointment({
+      doctor: doctorId,
+      user: userId,
+      date,
+      startTime,
+      endTime, 
+      status: "pending"
+    });
+
+    await newAppointment.save();
+
+    res.status(201).json({ message: "Appointment requested successfully", appointment: newAppointment });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
 };
   
   
