@@ -2,6 +2,9 @@ import Appointment from '../models/Appointments.js';
 import Doctor from '../models/Doctors.js';
 import User from '../models/Users.js';
 import { generateTimeSlots } from '../utils/slotGenerator.js';
+import mongoose from 'mongoose';
+
+const ObjectId = mongoose.Types.ObjectId;
 
 function addMinutesToTime(timeStr, minutesToAdd) {
   const [hours, minutes] = timeStr.split(':').map(Number);
@@ -10,7 +13,6 @@ function addMinutesToTime(timeStr, minutesToAdd) {
   return date.toTimeString().substring(0, 5); // "HH:MM"
 }
 
-
 export const getAvailableSlots = async (req, res) => {
   try {
     const { doctorId, date } = req.query;
@@ -18,27 +20,50 @@ export const getAvailableSlots = async (req, res) => {
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
 
-    const selectedDay = new Date(date).toLocaleString("en-US", { weekday: "long" });
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
+    // ⛔ Block past dates
+    if (selectedDate < today) {
+      return res.json({ slots: [] });
+    }
+
+    const selectedDay = selectedDate.toLocaleString("en-US", { weekday: "long" });
     const availabilityForDay = doctor.availability.find(a => a.day === selectedDay);
     if (!availabilityForDay) return res.json({ slots: [] });
+    
 
     const bookedAppointments = await Appointment.find({
-      doctor: doctorId,
+      doctor: new mongoose.Types.ObjectId(doctorId),
       date,
-      status: { $in: ['pending', 'approved'] }
-    });
+      status: "accepted"
+    }); 
 
-    const bookedTimes = bookedAppointments.map(a => a.time);
+
+    const bookedTimes = bookedAppointments.map(a => {
+      const [hour, minute] = a.startTime.split(":").map(Number);
+      return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    });
+    
+
 
     let availableSlots = [];
 
     for (let range of availabilityForDay.timeRanges) {
       const generated = generateTimeSlots(range.startTime, range.endTime, availabilityForDay.slotInterval);
-      const free = generated.filter(slot => !bookedTimes.includes(slot));
-      availableSlots.push(...free);
+      
+      for (let startTime of generated) {
+        const isBooked = bookedTimes.includes(startTime);
+        availableSlots.push({
+          startTime,
+          status: isBooked ? "booked" : "available"
+        });
+      }
     }
 
+    
+    
     res.json({ slots: availableSlots });
 
   } catch (err) {
@@ -48,12 +73,25 @@ export const getAvailableSlots = async (req, res) => {
 };
 
 
+
 export const requestAppointment = async (req, res) => {
   try {
     const { doctorId, userId, date, startTime } = req.body;
 
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) return res.status(404).json({ message: "Doctor not found" });
+
+    // checking for the past date
+  const requestedDate = new Date(date);
+  requestedDate.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (requestedDate < today) {
+    return res.status(400).json({ message: "You Cannot book appointments for past dates." });
+  }
+
 
     // Get availability for selected day
     const selectedDay = new Date(date).toLocaleString("en-US", { weekday: "long" });
