@@ -88,14 +88,14 @@ export const getStoriesByDoctor = async (req, res) => {
 
     const stories = await Stories.find({ doctor: doctorId })
       .populate("user", "fullname") // Get user's name
-      .sort({ createdAt: -1 }); // Newest first
+      .sort({ submittedAt: -1 }); // Newest first
 
     // Format the time as "1 week ago", etc.
     const formattedStories = stories.map((s) => ({
       ...s._doc,
       timeAgo: moment(s.submittedAt).fromNow(),
     }));
-
+    
     res.status(200).json(formattedStories);
   } catch (error) {
     console.error("Fetch Stories Error:", error);

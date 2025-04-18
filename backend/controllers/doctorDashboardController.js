@@ -6,8 +6,6 @@ import User from '../models/Users.js';
 
 export const getDoctorById = async (req, res) => {
   try {
-    console.log("Fetching doctor by ID:", req.params.id);
-
     const doctor = await Doctor.findById(req.params.id).populate('stories');
 
     if (!doctor) {
