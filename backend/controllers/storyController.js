@@ -1,85 +1,102 @@
-// import Doctor from '../models/Doctors';
-// import stories from '../models/Stories';
+import Stories from "../models/Stories.js";
+import Doctors from "../models/Doctors.js";
+import moment from "moment";
+import Appointment from "../models/Appointments.js";
 
-// exports.addStory = async (req, res) => {
+// Add a new story
+// export const addStory = async (req, res) => {
+//   console.log("REQ.USER:", req.user);
+//   console.log("REQ.BODY:", req.body);
+
 //   try {
-//     const { doctorId, userId, visitedFor, recommend, storyText } = req.body;
+//     const { visitedFor, recommended, story, doctorId } = req.body;
 
-//     if (!doctorId || !userId || !visitedFor || !storyText) {
-//       return res.status(400).json({ message: "All required fields must be filled" });
+//     // Validate required fields
+//     if (!visitedFor || typeof recommended === "undefined" || !story || !doctorId) {
+//       return res.status(400).json({ message: "All fields are required." });
 //     }
 
-//     const newStory = new stories({
+//     // Create the story
+//     const newStory = new Stories({
 //       doctor: doctorId,
-//       user: userId,
+//       user: req.user.id,
 //       visitedFor,
-//       recommend,
-//       storyText,
+//       recommended,
+//       story,
 //     });
 
 //     const savedStory = await newStory.save();
 
-//     await Doctor.findByIdAndUpdate(doctorId, {
-//       $push: { stories: savedStory._id }
+//     // Update Doctor's stories array
+//     await Doctors.findByIdAndUpdate(doctorId, {
+//       $push: { stories: savedStory._id },
 //     });
 
-//     res.status(201).json({ message: "Story submitted successfully", story: savedStory });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
+//     res.status(201).json({ message: "Story added successfully", story: savedStory });
+//   } catch (error) {
+//     console.error("Add Story Error:", error);
+//     res.status(500).json({ message: "Something went wrong" });
 //   }
 // };
 
-// exports.getDoctorStories = async (req, res) => {
-//   try {
-//     const { doctorId } = req.params;
-//     const stories = await stories.find({ doctor: doctorId }).populate("user", "fullname");
+const now = new Date();
+const todayDateOnly = now.toISOString().split("T")[0];
+const currentTime = now.toTimeString().slice(0, 5);
 
-//     res.status(200).json(stories);
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-
-import Stories from "../models/Stories.js";
-import Doctors from "../models/Doctors.js";
-import moment from "moment";
-
-// Add a new story
-export const addStory = async (req, res) => {
-  console.log("REQ.USER:", req.user);
-  console.log("REQ.BODY:", req.body);
-
+export const submitStory = async (req, res) => {
   try {
-    const { visitedFor, recommended, story, doctorId } = req.body;
+    const userId = req.userId;
+    const { doctorId, visitedFor, recommend, story } = req.body;
+    
+    // Check for approved & past appointment
+    const pastAppointment = await Appointment.findOne({
+      user: userId,
+      doctor: doctorId,
+      status: 'accepted',
+      // date: { $lt: new Date().toISOString().split('T')[0] }
+      $or: [
+        { date: { $lt: todayDateOnly } },
+        {
+          date: todayDateOnly,
+          endTime: { $lt: currentTime }
+        }
+      ]
+    });
 
-    // Validate required fields
-    if (!visitedFor || typeof recommended === "undefined" || !story || !doctorId) {
-      return res.status(400).json({ message: "All fields are required." });
+    if (!pastAppointment) {
+      return res.status(400).json({ message: 'No past approved appointment found with this doctor.' });
     }
 
-    // Create the story
+    // Check if user already submitted a story for this doctor
+    const existingStory = await Stories.findOne({ user: userId, doctor: doctorId });
+    if (existingStory) {
+      return res.status(400).json({ message: 'You have already submitted a story for this doctor.' });
+    }
+
     const newStory = new Stories({
       doctor: doctorId,
-      user: req.user.id,
+      user: userId,
       visitedFor,
-      recommended,
+      recommend,
       story,
+      submittedAt: new Date()
     });
 
-    const savedStory = await newStory.save();
+    await newStory.save();
 
-    // Update Doctor's stories array
+    // Push to doctor's `stories` array
     await Doctors.findByIdAndUpdate(doctorId, {
-      $push: { stories: savedStory._id },
+      $push: { stories: newStory._id }
     });
 
-    res.status(201).json({ message: "Story added successfully", story: savedStory });
+    res.status(201).json({ message: 'Story submitted successfully!', story: newStory });
   } catch (error) {
-    console.error("Add Story Error:", error);
-    res.status(500).json({ message: "Something went wrong" });
+    console.error('Submit Story Error:', error);
+    res.status(500).json({ message: 'Something went wrong while submitting the story.' });
   }
 };
+
+
 
 // Get stories by doctor
 export const getStoriesByDoctor = async (req, res) => {

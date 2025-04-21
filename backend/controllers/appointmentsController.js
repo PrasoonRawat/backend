@@ -74,53 +74,114 @@ export const getAvailableSlots = async (req, res) => {
 
 
 
+// export const requestAppointment = async (req, res) => {
+//   try {
+//     const { doctorId, userId, date, startTime } = req.body;
+
+//     const doctor = await Doctor.findById(doctorId);
+//     if (!doctor) return res.status(404).json({ message: "Doctor not found" });
+
+//     // checking for the past date
+//   const requestedDate = new Date(date);
+//   requestedDate.setHours(0, 0, 0, 0);
+
+//   const today = new Date();
+//   today.setHours(0, 0, 0, 0);
+
+//   if (requestedDate < today) {
+//     return res.status(400).json({ message: "You Cannot book appointments for past dates." });
+//   }
+
+
+//     // Get availability for selected day
+//     const selectedDay = new Date(date).toLocaleString("en-US", { weekday: "long" });
+//     const availabilityForDay = doctor.availability.find(d => d.day === selectedDay);
+//     if (!availabilityForDay) return res.status(400).json({ message: "Doctor not available on this day" });
+    
+//     // calculate endTime
+//     const endTime = addMinutesToTime(startTime, availabilityForDay.slotInterval);
+
+    
+//     // Get all booked slots for that day
+//     const existingAppointments = await Appointment.find({
+//       doctor: doctorId,
+//       date,
+//       status: { $in: ['pending', 'approved'] }
+//     });
+
+//     const bookedTimes = existingAppointments.map(a => a.startTime);
+
+//     if (bookedTimes.includes(startTime)) {
+//       return res.status(400).json({ message: "Time slot already booked" });
+//     }
+
+//     const newAppointment = new Appointment({
+//       doctor: doctorId,
+//       user: userId,
+//       date,
+//       startTime,
+//       endTime, 
+//       status: "pending"
+//     });
+
+//     await newAppointment.save();
+
+//     res.status(201).json({ message: "Appointment requested successfully", appointment: newAppointment });
+
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+  
+
 export const requestAppointment = async (req, res) => {
   try {
-    const { doctorId, userId, date, startTime } = req.body;
+    const { doctorId, date, startTime } = req.body;
+    const userId = req.userId; // ✅ extracted from token
 
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) return res.status(404).json({ message: "Doctor not found" });
 
-    // checking for the past date
-  const requestedDate = new Date(date);
-  requestedDate.setHours(0, 0, 0, 0);
+    // Check for past dates
+    const requestedDate = new Date(date);
+    requestedDate.setHours(0, 0, 0, 0);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  if (requestedDate < today) {
-    return res.status(400).json({ message: "You Cannot book appointments for past dates." });
-  }
+    if (requestedDate < today) {
+      return res.status(400).json({ message: "You cannot book appointments for past dates." });
+    }
 
-
-    // Get availability for selected day
+    // Check doctor's availability
     const selectedDay = new Date(date).toLocaleString("en-US", { weekday: "long" });
     const availabilityForDay = doctor.availability.find(d => d.day === selectedDay);
-    if (!availabilityForDay) return res.status(400).json({ message: "Doctor not available on this day" });
-    
-    // calculate endTime
+    if (!availabilityForDay) return res.status(400).json({ message: "Doctor not available on this day." });
+
+    // Calculate endTime
     const endTime = addMinutesToTime(startTime, availabilityForDay.slotInterval);
 
-    
-    // Get all booked slots for that day
+    // Check for already booked slots
     const existingAppointments = await Appointment.find({
       doctor: doctorId,
       date,
-      status: { $in: ['pending', 'approved'] }
+      status: { $in: ['pending', 'accepted'] }
     });
 
     const bookedTimes = existingAppointments.map(a => a.startTime);
 
     if (bookedTimes.includes(startTime)) {
-      return res.status(400).json({ message: "Time slot already booked" });
+      return res.status(400).json({ message: "Time slot already booked." });
     }
 
+    // Create appointment
     const newAppointment = new Appointment({
       doctor: doctorId,
       user: userId,
       date,
       startTime,
-      endTime, 
+      endTime,
       status: "pending"
     });
 
@@ -129,12 +190,10 @@ export const requestAppointment = async (req, res) => {
     res.status(201).json({ message: "Appointment requested successfully", appointment: newAppointment });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Appointment Request Error:", err);
+    res.status(500).json({ message: "Server error while requesting appointment." });
   }
 };
-  
-  
 
 export const respondToAppointment = async (req, res) => {
   try {

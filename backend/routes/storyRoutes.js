@@ -9,13 +9,13 @@
 
 
 import express from "express";
-import { addStory, getStoriesByDoctor } from "../controllers/storyController.js";
+import { submitStory, getStoriesByDoctor } from "../controllers/storyController.js";
 import { verifyToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 // Route to submit a new story (requires login)
-router.post("/add", verifyToken, addStory);
+router.post("/add", verifyToken, submitStory);
 
 // Route to fetch all stories for a specific doctor
 router.get("/doctor/:doctorId", getStoriesByDoctor);
