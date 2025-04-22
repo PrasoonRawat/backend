@@ -169,6 +169,18 @@ export const requestAppointment = async (req, res) => {
       status: { $in: ['pending', 'accepted'] }
     });
 
+    const setAppointment = await Appointment.findOne({
+      doctor: doctorId,
+      user: userId,
+      date, 
+      startTime,
+      endTime,
+      status: 'pending'
+    });
+
+    if (setAppointment) {
+      return res.status(400).json({ message: "You already have a pending appointment for this time." });
+    }
     const bookedTimes = existingAppointments.map(a => a.startTime);
 
     if (bookedTimes.includes(startTime)) {
