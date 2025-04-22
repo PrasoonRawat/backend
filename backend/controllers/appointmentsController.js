@@ -166,7 +166,7 @@ export const requestAppointment = async (req, res) => {
     const existingAppointments = await Appointment.find({
       doctor: doctorId,
       date,
-      status: { $in: ['pending', 'accepted'] }
+      status: 'accepted'
     });
 
     const setAppointment = await Appointment.findOne({
