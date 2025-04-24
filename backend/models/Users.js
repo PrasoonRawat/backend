@@ -23,7 +23,12 @@ const UsersSchema = new mongoose.Schema({
         }],
         default: []
     },    
-    photo: { type: String, default: '' }
+    photo: { type: String, default: '' },
+    refreshToken: {
+        type: String,
+        default: null,
+      },
+      
 }, { timestamps: true });
 
 export default mongoose.model("Users", UsersSchema);

@@ -10,10 +10,13 @@ import doctorDashboardRoutes from './routes/doctorDashboardRoutes.js';
 import appointmentRoutes from './routes/appointments.js';
 import doctorRoutes from './routes/doctorRoutes.js';
 import storyRoutes from './routes/storyRoutes.js';
+import cookieParser from "cookie-parser";
 
 // main code
 dotenv.config();
+
 const app = express();
+app.use(cookieParser());
 app.use(cors());
 app.use(express.json());
 

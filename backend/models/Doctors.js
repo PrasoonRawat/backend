@@ -93,6 +93,10 @@ const DoctorsSchema = new mongoose.Schema({
       },      
     appointments: { type: [mongoose.Schema.Types.ObjectId], ref: 'Appointments', default: [] },
     sharedDocuments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Users' }],
+    refreshToken: {
+      type: String,
+      default: null,
+    },    
 }, { timestamps: true });
 
 export default mongoose.model("Doctors", DoctorsSchema);
