@@ -15,12 +15,26 @@ import cookieParser from "cookie-parser";
 // main code
 dotenv.config();
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',');
+
 const app = express();
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+}));
+
 app.use(cookieParser());
-app.use(cors());
+// app.use(cors());
 app.use(express.json());
 
-app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/user/dashboard', userDashboardRoutes);
 app.use('/api/doctor/dashboard', doctorDashboardRoutes);
