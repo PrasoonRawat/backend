@@ -27,7 +27,7 @@ app.use(cors({
   // },
 
   // origin: 'http://localhost:5173',
-  origin: 'https://medconnect-user.netlify.app/',
+  origin: 'https://medconnect-user.netlify.app',
   credentials: true,
 }));
 
