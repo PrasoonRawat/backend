@@ -46,7 +46,7 @@ const currentTime = now.toTimeString().slice(0, 5);
 export const submitStory = async (req, res) => {
   try {
     const userId = req.userId;
-    const { doctorId, visitedFor, recommend, story } = req.body;
+    const { doctorId, visitedFor, recommended, story } = req.body;
     
     // Check for approved & past appointment
     const pastAppointment = await Appointment.findOne({
@@ -77,7 +77,7 @@ export const submitStory = async (req, res) => {
       doctor: doctorId,
       user: userId,
       visitedFor,
-      recommend,
+      recommended,
       story,
       submittedAt: new Date()
     });
