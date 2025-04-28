@@ -16,18 +16,20 @@ import cookieParser from "cookie-parser";
 dotenv.config();
 const app = express();
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [];
+
 app.use(cors({
-  // origin: function (origin, callback) {
-  //   if (!origin) return callback(null, true);
-  //   if (allowedOrigins.includes(origin)) {
-  //     return callback(null, true);
-  //   } else {
-  //     return callback(new Error('Not allowed by CORS'));
-  //   }
-  // },
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
 
   // origin: 'http://localhost:5173',
-  origin: 'https://medconnect-user.netlify.app',
+  // origin: 'https://medconnect-user.netlify.app',
   credentials: true,
 }));
 
