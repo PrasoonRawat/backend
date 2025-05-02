@@ -13,6 +13,7 @@
 // const upload = multer({ storage });
 
 // export default upload;
+//Example
 
 import multer from 'multer';
 const storage = multer.memoryStorage();
