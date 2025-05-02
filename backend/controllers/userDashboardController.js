@@ -45,38 +45,86 @@ export const getUserProfile = async (req, res) => {
 };
 
 export const getUserAppointments = async (req, res) => {
-    try {
-      // Fetch the user with their appointment IDs
-      const user = await User.findById(req.user.id).populate({
-        path: 'appointments',
-        populate: {
-          path: 'doctor',
-          select: 'fullname', // Only get doctor's name
-        },
-      });
-  
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-  
-      // Map the appointments to extract relevant info
-      
-      const formattedAppointments = user.appointments.map((appt) => (
-        {
-        doctorName: appt.doctor?.fullname || 'Unknown',
-        date: appt.date,
-        time: `${appt.startTime} - ${appt.endTime}`,
-        submissionDate: appt.createdAt,
-        visitedFor: appt.visitingFor || '',
-        status: appt.status || 'Not Confirmed',
-      }));
-  
-      res.status(200).json({ appointments: formattedAppointments.reverse() });
-    } catch (error) {
-      console.error('Error fetching user appointments:', error);
-      res.status(500).json({ error: 'Server error' });
+  try {
+    // Fetch the user with their appointment IDs
+    const user = await User.findById(req.user.id).populate({
+      path: 'appointments',
+      populate: {
+        path: 'doctor',
+        select: 'fullname', // Only get doctor's name
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
-  };
+
+    // Map the appointments to extract relevant info
+    
+    const formattedAppointments = user.appointments.map((appt) => (
+      {
+      doctorName: appt.doctor?.fullname || 'Unknown',
+      date: appt.date,
+      time: `${appt.startTime} - ${appt.endTime}`,
+      submissionDate: appt.createdAt,
+      visitedFor: appt.visitingFor || '',
+      status: appt.status || 'Not Confirmed',
+    }));
+
+    res.status(200).json({ appointments: formattedAppointments.reverse() });
+  } catch (error) {
+    console.error('Error fetching user appointments:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Get users Documents
+export const getDocuments = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const user = await User.findById(userId).populate("documents.author");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const enrichedDocuments = await Promise.all(
+      user.documents.map(async (doc) => {
+        const authorId = doc.author;
+
+        let authorDetails = null;
+        let fullName = "Unknown";
+
+        // Check in User model
+        authorDetails = await User.findById(authorId).select("fullname");
+        if (!authorDetails) {
+          // Check in Doctor model
+          authorDetails = await Doctor.findById(authorId).select("fullname");
+        }
+
+        if (authorDetails) {
+          fullName = authorDetails.fullname;
+        }
+
+        return {
+          _id: doc._id,
+          file: doc.file,
+          author: {
+            id: authorId,
+            fullname: fullName,
+          },
+        };
+      })
+    );
+
+    return res.status(200).json({ documents: enrichedDocuments });
+  } catch (error) {
+    console.error("Error in getDocuments:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
   
 
 // Get User Documents (Accessible to Authorized Doctors or Authors)
