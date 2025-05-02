@@ -1,6 +1,6 @@
 import express from 'express';
 import { verifyToken } from '../middleware/authMiddleware.js';
-import { getUserProfile, getUserDocuments, grantAccessToDoctor } from '../controllers/userDashboardController.js';
+import { getUserProfile, getUserDocuments, grantAccessToDoctor, getUserAppointments } from '../controllers/userDashboardController.js';
 import upload from '../middleware/uploadMiddleware.js';
 import { uploadDocument } from '../controllers/userDashboardController.js';
 
@@ -20,8 +20,10 @@ router.get('/documents/:userId', verifyToken, getUserDocuments);
 // upload document
 router.post('/documents/upload', verifyToken, upload.single('file'), uploadDocument);
 
-// access document
+// giving document access to doctor
 router.put("/documents/grant-access", verifyToken, grantAccessToDoctor);
+
+router.get("/appointments", verifyToken, getUserAppointments);
 
 
 export default router;

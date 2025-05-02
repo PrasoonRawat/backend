@@ -1,18 +1,83 @@
 import User from '../models/Users.js';
 import Doctor from '../models/Doctors.js';
+import Appointment from "../models/Appointments.js";
 import cloudinary from '../config/cloudinary.js';
+
+// export const getUserProfile = async (req, res) => {
+//     try {
+//         const user = await User.findById(req.user.id).select('-password');
+//         if (!user) {
+//             return res.status(404).json({ error: 'User not found' });
+//         }
+//         res.status(200).json(user);
+//     } catch (error) {
+//         res.status(500).json({ error: 'Server error' });
+//     }
+// };
 
 export const getUserProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select('-password');
+        const user = await User.findById(req.user.id).select('fullname DOB gender phone');
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        res.status(200).json(user);
+
+        // Optional: Calculate accurate age on the backend
+        const today = new Date();
+        const birthDate = new Date(user.DOB);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        const formattedDOB = new Date(user.DOB).toLocaleDateString('en-GB');
+        res.status(200).json({
+            fullname: user.fullname,
+            DOB: user.DOB,
+            gender: user.gender,
+            phone: user.phone,
+            DOB: formattedDOB,
+            age,
+        });
     } catch (error) {
         res.status(500).json({ error: 'Server error' });
     }
 };
+
+export const getUserAppointments = async (req, res) => {
+    try {
+      // Fetch the user with their appointment IDs
+      const user = await User.findById(req.user.id).populate({
+        path: 'appointments',
+        populate: {
+          path: 'doctor',
+          select: 'fullname', // Only get doctor's name
+        },
+      });
+  
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+  
+      // Map the appointments to extract relevant info
+      
+      const formattedAppointments = user.appointments.map((appt) => (
+        {
+        doctorName: appt.doctor?.fullname || 'Unknown',
+        date: appt.date,
+        time: `${appt.startTime} - ${appt.endTime}`,
+        submissionDate: appt.createdAt,
+        visitedFor: appt.visitingFor || '',
+        status: appt.status || 'Not Confirmed',
+      }));
+  
+      res.status(200).json({ appointments: formattedAppointments.reverse() });
+    } catch (error) {
+      console.error('Error fetching user appointments:', error);
+      res.status(500).json({ error: 'Server error' });
+    }
+  };
+  
 
 // Get User Documents (Accessible to Authorized Doctors or Authors)
 export const getUserDocuments = async (req, res) => {

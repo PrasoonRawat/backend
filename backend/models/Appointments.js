@@ -16,6 +16,7 @@ import mongoose from "mongoose";
 const appointmentSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
   doctor: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctors', required: true },
+  visitingFor: { type: String, required: true },
   date: { type: Date, required: true },
   startTime: { type: String, required: true },
   endTime: { type: String, required: true },

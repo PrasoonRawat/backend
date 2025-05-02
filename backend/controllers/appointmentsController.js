@@ -225,7 +225,7 @@ export const getAvailableSlots = async (req, res) => {
 
 export const requestAppointment = async (req, res) => {
   try {
-    const { doctorId, date, startTime } = req.body;
+    const { doctorId, date, startTime, visitingFor } = req.body;
     const userId = req.userId; // ✅ extracted from token
 
     const doctor = await Doctor.findById(doctorId);
@@ -279,13 +279,28 @@ export const requestAppointment = async (req, res) => {
     const newAppointment = new Appointment({
       doctor: doctorId,
       user: userId,
+      visitingFor,
       date,
       startTime,
       endTime,
       status: "pending"
     });
 
+    
+
     await newAppointment.save();
+
+
+    // Add appointment ID to user's appointments array
+    await User.findByIdAndUpdate(userId, {
+      $push: { appointments: newAppointment._id }
+    });
+    
+    // Add appointment ID to doctor's appointments array
+    await Doctor.findByIdAndUpdate(doctorId, {
+      $push: { appointments: newAppointment._id }
+    });
+
 
     res.status(201).json({ message: "Appointment requested successfully", appointment: newAppointment });
 
