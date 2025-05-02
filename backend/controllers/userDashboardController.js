@@ -118,7 +118,7 @@ export const getDocuments = async (req, res) => {
       })
     );
 
-    return res.status(200).json({ documents: enrichedDocuments });
+    return res.status(200).json({ documents: enrichedDocuments.reverse() });
   } catch (error) {
     console.error("Error in getDocuments:", error);
     return res.status(500).json({ message: "Server error" });
