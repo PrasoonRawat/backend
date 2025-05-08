@@ -9,6 +9,7 @@ import userDashboardRoutes from './routes/userDashboardRoutes.js';
 import doctorDashboardRoutes from './routes/doctorDashboardRoutes.js';
 import appointmentRoutes from './routes/appointments.js';
 import doctorRoutes from './routes/doctorRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 import storyRoutes from './routes/storyRoutes.js';
 import cookieParser from "cookie-parser";
 
@@ -42,6 +43,7 @@ app.use('/api/user/dashboard', userDashboardRoutes);
 app.use('/api/doctor/dashboard', doctorDashboardRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/doctors', doctorRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/stories', storyRoutes);
 
 mongoose

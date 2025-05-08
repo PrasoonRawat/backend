@@ -275,3 +275,38 @@ export const grantAccessToDoctor = async (req, res) => {
         res.status(500).json({ error: 'Server error' });
     }
 };
+
+
+// for retrieving the user's profile
+
+export const getUserById = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Fetch the user by ID and select only the required fields
+    const user = await User.findById(userId).select("fullname DOB age gender photo");
+
+    if (!user) {
+      console.log("User not found for ID:", userId);
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Calculate the age if it's not stored in the database
+    const dob = new Date(user.DOB);
+    const age = new Date().getFullYear() - dob.getFullYear();
+
+    // Prepare the user data to send in the response
+    const userData = {
+      name: user.fullname,
+      DOB: user.DOB,
+      age: age,
+      gender: user.gender,
+      photo: user.photo || "", // Return empty string if no photo is set
+    };
+
+    res.status(200).json(userData);
+  } catch (error) {
+    console.error("Error fetching user:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
