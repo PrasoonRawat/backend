@@ -32,16 +32,15 @@ export const registerUser = async (req, res) => {
 
 // Doctor Registration
 export const registerDoctor = async (req, res) => {
-    const { fullname, email, phone, password, ...otherDetails } = req.body;
+    const { fullname, email, password, concent} = req.body;
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
         const newDoctor = new Doctors({
             fullname,
             email,
-            phone,
             password: hashedPassword,
-            ...otherDetails
+            concent
         });
 
         await newDoctor.save();
@@ -50,6 +49,26 @@ export const registerDoctor = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+// export const registerDoctor = async (req, res) => {
+//     const { fullname, email, phone, password, ...otherDetails } = req.body;
+
+//     try {
+//         const hashedPassword = await bcrypt.hash(password, 10);
+//         const newDoctor = new Doctors({
+//             fullname,
+//             email,
+//             phone,
+//             password: hashedPassword,
+//             ...otherDetails
+//         });
+
+//         await newDoctor.save();
+//         res.status(201).json({ message: 'Doctor registered successfully' });
+//     } catch (error) {
+//         res.status(500).json({ error: error.message });
+//     }
+// };
 
 
 

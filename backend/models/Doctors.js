@@ -56,37 +56,37 @@ import mongoose from "mongoose";
 const DoctorsSchema = new mongoose.Schema({
     fullname: { type: String, required: true }, //need this
     email: { type: String, required: true, unique: true },
-    phone: { type: Number, required: true },
+    phone: { type: Number,  },
     password: { type: String, required: true },
-    gender: { type: String, required: true },
-    DOB: { type: Date, required: true },
-    age: { type: Number, required: true },
-    experience: { type: Number, required: true }, //need this
-    description: { type: String, required: true }, //need this
-    specialization: { type: [String], required: true }, //need this
-    subspecialization: [{ type: [String], required: true }], //need this
-    degrees: { type: [String], required: true }, //need this
-    certification: { type: [String], required: true }, //need this
-    educationHistory: { type: [String], required: true },
+    gender: { type: String,  },
+    DOB: { type: Date,  },
+    age: { type: Number,  },
+    experience: { type: Number,  }, //need this
+    description: { type: String,  }, //need this
+    specialization: { type: [String],  }, //need this
+    subspecialization: [{ type: [String],  }], //need this
+    degrees: { type: [String],  }, //need this
+    certification: { type: [String],  }, //need this
+    educationHistory: { type: [String],  },
     pdf: { type: [String], default: [] },
-    fee: { type: Number, required: true },
-    emergencyFee: { type: Number, required: true },
-    location: { type: String, required: true }, //need this
-    city: { type: String, required: true }, //need this
+    fee: { type: Number,  },
+    emergencyFee: { type: Number,  },
+    location: { type: String,  }, //need this
+    city: { type: String,  }, //need this
     ratings: { type: Number, min: 0, max: 5, default: 0 }, //need this
-    languagesSpoken: { type: [String], required: true }, //need this
+    languagesSpoken: { type: [String],  }, //need this
     stories: {type: [mongoose.Schema.Types.ObjectId],ref: 'Stories', default: []},      
     availability: {
         type: [
           {
-            day: { type: String, required: true }, // e.g., Monday
+            day: { type: String,  }, // e.g., Monday
             timeRanges: [
               {
-                startTime: { type: String, required: true }, // "09:00"
-                endTime: { type: String, required: true },   // "15:00"
+                startTime: { type: String,  }, // "09:00"
+                endTime: { type: String,  },   // "15:00"
               },
             ],
-            slotInterval: { type: Number, required: true }, // In minutes (e.g., 15, 30)
+            slotInterval: { type: Number,  }, // In minutes (e.g., 15, 30)
           },
         ],
         default: [],
@@ -97,6 +97,7 @@ const DoctorsSchema = new mongoose.Schema({
       type: String,
       default: null,
     },    
+    concent: {type:Boolean, default: false, required: true},
 }, { timestamps: true });
 
 export default mongoose.model("Doctors", DoctorsSchema);
